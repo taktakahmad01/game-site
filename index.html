@@ -8,7 +8,133 @@
 </head>
 
 <body>
+<!-- PROFILE SETUP -->
 
+<section class="profile-screen" id="profileScreen">
+
+  <div class="profile-card">
+
+    <div class="profile-logo">🎮</div>
+
+    <h1>صايب البروفايل ديالك</h1>
+
+    <p class="profile-subtitle">
+      اختار الشخصية والاسم والبلد
+    </p>
+
+
+    <div class="profile-section-title">
+      اختار الشخصية
+    </div>
+
+    <div class="avatar-list">
+
+      <button class="avatar-choice selected"
+              data-avatar="👦"
+              type="button">
+        👦
+      </button>
+
+      <button class="avatar-choice"
+              data-avatar="👧"
+              type="button">
+        👧
+      </button>
+
+      <button class="avatar-choice"
+              data-avatar="👨"
+              type="button">
+        👨
+      </button>
+
+      <button class="avatar-choice"
+              data-avatar="👩"
+              type="button">
+        👩
+      </button>
+
+    </div>
+
+
+    <label class="profile-label">
+      USERNAME
+    </label>
+
+    <input
+      class="profile-field"
+      id="profileUsername"
+      maxlength="15"
+      autocomplete="off"
+      placeholder="مثال: Mostafa"
+      type="text"
+    >
+
+
+    <label class="profile-label">
+      COUNTRY
+    </label>
+
+    <select
+      class="profile-field"
+      id="profileCountry">
+
+      <option value="">
+        اختار البلد
+      </option>
+
+      <option value="Morocco">
+        🇲🇦 المغرب
+      </option>
+
+      <option value="Algeria">
+        🇩🇿 الجزائر
+      </option>
+
+      <option value="Tunisia">
+        🇹🇳 تونس
+      </option>
+
+      <option value="Egypt">
+        🇪🇬 مصر
+      </option>
+
+      <option value="Saudi Arabia">
+        🇸🇦 السعودية
+      </option>
+
+      <option value="UAE">
+        🇦🇪 الإمارات
+      </option>
+
+      <option value="Qatar">
+        🇶🇦 قطر
+      </option>
+
+      <option value="Other">
+        🌍 دولة أخرى
+      </option>
+
+    </select>
+
+
+    <div
+      class="profile-message"
+      id="profileMessage">
+    </div>
+
+
+    <button
+      class="profile-create-btn"
+      id="createProfile"
+      type="button">
+
+      دخول للعبة
+
+    </button>
+
+  </div>
+
+</section>
   <main class="home" id="homeScreen">
 
     <div class="logo">🎮</div>
@@ -128,7 +254,8 @@
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
 
   <script src="firebase.js"></script>
-<script src="core.js?v=130"></script>
 
+<script src="profile.js?v=100"></script>
+<script src="core.js?v=130"></script>
 </body>
 </html>
