@@ -1,69 +1,153 @@
 const GameApp = {
 
+  version: "1.2.0",
+
   currentRoomCode: null,
+  roomListenerRef: null,
+
 
   init() {
 
-    this.createBtn = document.getElementById("createGame");
-    this.joinBtn = document.getElementById("joinGame");
-    this.status = document.getElementById("status");
+    this.createBtn =
+      document.getElementById("createGame");
 
-    this.joinModal = document.getElementById("joinModal");
-    this.closeJoinModalBtn = document.getElementById("closeJoinModal");
-    this.roomCodeInput = document.getElementById("roomCodeInput");
-    this.confirmJoinBtn = document.getElementById("confirmJoin");
-    this.joinError = document.getElementById("joinError");
+    this.joinBtn =
+      document.getElementById("joinGame");
 
-    this.waitingScreen = document.getElementById("waitingScreen");
-    this.waitingRoomCode = document.getElementById("waitingRoomCode");
-    this.waitingTitle = document.getElementById("waitingTitle");
-    this.waitingText = document.getElementById("waitingText");
-    this.cancelRoomBtn = document.getElementById("cancelRoom");
+    this.status =
+      document.getElementById("status");
 
-    this.createBtn.addEventListener("click", () => {
-      this.createRoom();
-    });
 
-    this.joinBtn.addEventListener("click", () => {
-      this.openJoinModal();
-    });
+    this.joinModal =
+      document.getElementById("joinModal");
 
-    this.closeJoinModalBtn.addEventListener("click", () => {
-      this.closeJoinModal();
-    });
+    this.closeJoinModalBtn =
+      document.getElementById("closeJoinModal");
 
-    this.confirmJoinBtn.addEventListener("click", () => {
-      this.joinRoom();
-    });
+    this.roomCodeInput =
+      document.getElementById("roomCodeInput");
 
-    this.cancelRoomBtn.addEventListener("click", () => {
-      this.cancelRoom();
-    });
+    this.confirmJoinBtn =
+      document.getElementById("confirmJoin");
 
-    this.roomCodeInput.addEventListener("input", () => {
+    this.joinError =
+      document.getElementById("joinError");
 
-      this.roomCodeInput.value =
-        this.roomCodeInput.value
-          .toUpperCase()
-          .replace(/[^A-Z0-9]/g, "");
 
-      this.joinError.textContent = "";
+    this.waitingScreen =
+      document.getElementById("waitingScreen");
 
-    });
+    this.waitingRoomCode =
+      document.getElementById("waitingRoomCode");
+
+    this.waitingTitle =
+      document.getElementById("waitingTitle");
+
+    this.waitingText =
+      document.getElementById("waitingText");
+
+    this.cancelRoomBtn =
+      document.getElementById("cancelRoom");
+
+
+    if (this.createBtn) {
+
+      this.createBtn.addEventListener(
+        "click",
+        () => {
+          this.createRoom();
+        }
+      );
+
+    }
+
+
+    if (this.joinBtn) {
+
+      this.joinBtn.addEventListener(
+        "click",
+        () => {
+          this.openJoinModal();
+        }
+      );
+
+    }
+
+
+    if (this.closeJoinModalBtn) {
+
+      this.closeJoinModalBtn.addEventListener(
+        "click",
+        () => {
+          this.closeJoinModal();
+        }
+      );
+
+    }
+
+
+    if (this.confirmJoinBtn) {
+
+      this.confirmJoinBtn.addEventListener(
+        "click",
+        () => {
+          this.joinRoom();
+        }
+      );
+
+    }
+
+
+    if (this.cancelRoomBtn) {
+
+      this.cancelRoomBtn.addEventListener(
+        "click",
+        () => {
+          this.cancelRoom();
+        }
+      );
+
+    }
+
+
+    if (this.roomCodeInput) {
+
+      this.roomCodeInput.addEventListener(
+        "input",
+        () => {
+
+          this.roomCodeInput.value =
+            this.roomCodeInput.value
+              .toUpperCase()
+              .replace(/[^A-Z0-9]/g, "");
+
+          if (this.joinError) {
+            this.joinError.textContent = "";
+          }
+
+        }
+      );
+
+    }
 
   },
 
 
   generateRoomCode() {
 
-    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    const chars =
+      "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
     let code = "";
 
     for (let i = 0; i < 6; i++) {
+
       code += chars.charAt(
-        Math.floor(Math.random() * chars.length)
+        Math.floor(
+          Math.random() * chars.length
+        )
       );
+
     }
 
     return code;
@@ -75,13 +159,15 @@ const GameApp = {
 
     while (true) {
 
-      const code = this.generateRoomCode();
+      const code =
+        this.generateRoomCode();
 
-      const snap = await database
-        .ref("gameV2/rooms/" + code)
-        .once("value");
+      const snapshot =
+        await database
+          .ref("gameV2/rooms/" + code)
+          .once("value");
 
-      if (!snap.exists()) {
+      if (!snapshot.exists()) {
         return code;
       }
 
@@ -94,37 +180,60 @@ const GameApp = {
 
     try {
 
-      this.status.textContent = "Creating room...";
+      if (this.status) {
+        this.status.textContent =
+          "Creating room...";
+      }
+
 
       const roomCode =
         await this.createUniqueRoomCode();
+
 
       await database
         .ref("gameV2/rooms/" + roomCode)
         .set({
 
           code: roomCode,
+
           status: "waiting",
+
           playerCount: 1,
 
           createdAt:
-            firebase.database.ServerValue.TIMESTAMP
+            firebase.database
+              .ServerValue
+              .TIMESTAMP
 
         });
 
-      this.currentRoomCode = roomCode;
+
+      this.currentRoomCode =
+        roomCode;
+
 
       this.showWaitingRoom(
         roomCode,
         false
       );
-this.watchRoom(roomCode);
+
+
+      this.watchRoom(
+        roomCode
+      );
+
+
     } catch (error) {
 
-      console.error(error);
+      console.error(
+        "Create room error:",
+        error
+      );
 
-      this.status.textContent =
-        "Could not create room";
+      if (this.status) {
+        this.status.textContent =
+          "Could not create room";
+      }
 
     }
 
@@ -133,44 +242,89 @@ this.watchRoom(roomCode);
 
   openJoinModal() {
 
-    this.roomCodeInput.value = "";
+    if (!this.joinModal) {
+      return;
+    }
 
-    this.joinError.textContent = "";
 
-    this.joinModal.classList.remove("hidden");
+    if (this.roomCodeInput) {
+      this.roomCodeInput.value = "";
+    }
 
-    setTimeout(() => {
-      this.roomCodeInput.focus();
-    }, 150);
+    if (this.joinError) {
+      this.joinError.textContent = "";
+    }
+
+
+    this.joinModal.classList.remove(
+      "hidden"
+    );
+
+
+    setTimeout(
+      () => {
+
+        if (this.roomCodeInput) {
+          this.roomCodeInput.focus();
+        }
+
+      },
+      150
+    );
 
   },
 
 
   closeJoinModal() {
 
-    this.joinModal.classList.add("hidden");
+    if (!this.joinModal) {
+      return;
+    }
+
+    this.joinModal.classList.add(
+      "hidden"
+    );
 
   },
 
 
   async joinRoom() {
 
+    if (!this.roomCodeInput) {
+      return;
+    }
+
+
     const roomCode =
       this.roomCodeInput.value
         .trim()
         .toUpperCase();
 
+
     if (roomCode.length !== 6) {
 
-      this.joinError.textContent =
-        "دخل الكود المكوّن من 6 حروف";
+      if (this.joinError) {
+
+        this.joinError.textContent =
+          "دخل الكود المكوّن من 6 حروف";
+
+      }
 
       return;
 
     }
 
-    this.confirmJoinBtn.disabled = true;
-    this.confirmJoinBtn.textContent = "جاري الدخول...";
+
+    if (this.confirmJoinBtn) {
+
+      this.confirmJoinBtn.disabled =
+        true;
+
+      this.confirmJoinBtn.textContent =
+        "جاري الدخول...";
+
+    }
+
 
     try {
 
@@ -179,162 +333,323 @@ this.watchRoom(roomCode);
           "gameV2/rooms/" + roomCode
         );
 
-      const snap =
+
+      const snapshot =
         await roomRef.once("value");
 
-      if (!snap.exists()) {
 
-        this.joinError.textContent =
-          "هاد الغرفة ما كايناش";
+      if (!snapshot.exists()) {
+
+        if (this.joinError) {
+
+          this.joinError.textContent =
+            "هاد الغرفة ما كايناش";
+
+        }
 
         return;
 
       }
 
-      const room = snap.val();
+
+      const room =
+        snapshot.val();
+
 
       if (room.status !== "waiting") {
 
-        this.joinError.textContent =
-          "هاد الغرفة ما بقاتش متاحة";
+        if (this.joinError) {
+
+          this.joinError.textContent =
+            "هاد الغرفة ما بقاتش متاحة";
+
+        }
 
         return;
 
       }
 
-      if (room.playerCount >= 2) {
 
-        this.joinError.textContent =
-          "الغرفة عامرة";
+      if (
+        room.playerCount &&
+        room.playerCount >= 2
+      ) {
+
+        if (this.joinError) {
+
+          this.joinError.textContent =
+            "الغرفة عامرة";
+
+        }
 
         return;
 
       }
+
 
       await roomRef.update({
 
         status: "ready",
+
         playerCount: 2,
 
         joinedAt:
-          firebase.database.ServerValue.TIMESTAMP
+          firebase.database
+            .ServerValue
+            .TIMESTAMP
 
       });
 
-      this.currentRoomCode = roomCode;
+
+      this.currentRoomCode =
+        roomCode;
+
 
       this.closeJoinModal();
+
 
       this.showWaitingRoom(
         roomCode,
         true
       );
 
+
+      this.watchRoom(
+        roomCode
+      );
+
+
     } catch (error) {
 
-      console.error(error);
+      console.error(
+        "Join room error:",
+        error
+      );
 
-      this.joinError.textContent =
-        "وقع مشكل، عاود جرب";
+      if (this.joinError) {
+
+        this.joinError.textContent =
+          "وقع مشكل، عاود جرب";
+
+      }
+
 
     } finally {
 
-      this.confirmJoinBtn.disabled = false;
-      this.confirmJoinBtn.textContent = "دخول";
+      if (this.confirmJoinBtn) {
+
+        this.confirmJoinBtn.disabled =
+          false;
+
+        this.confirmJoinBtn.textContent =
+          "دخول";
+
+      }
 
     }
 
   },
 
 
-  showWaitingRoom(roomCode, joined) {
+  showWaitingRoom(
+    roomCode,
+    joined
+  ) {
 
-    this.waitingRoomCode.textContent =
-      roomCode;
+    if (this.waitingRoomCode) {
+
+      this.waitingRoomCode.textContent =
+        roomCode;
+
+    }
+
 
     if (joined) {
 
-      this.waitingTitle.textContent =
-        "تم الدخول للغرفة ✅";
+      if (this.waitingTitle) {
 
-      this.waitingText.textContent =
-        "اللاعبين بجوج متصلين";
+        this.waitingTitle.textContent =
+          "تم الدخول للغرفة ✅";
+
+      }
+
+
+      if (this.waitingText) {
+
+        this.waitingText.textContent =
+          "اللاعبين بجوج متصلين";
+
+      }
+
 
     } else {
 
-      this.waitingTitle.textContent =
-        "كنستناو اللاعب الثاني...";
+      if (this.waitingTitle) {
 
-      this.waitingText.textContent =
-        "شارك الكود مع صاحبك";
+        this.waitingTitle.textContent =
+          "كنستناو اللاعب الثاني...";
+
+      }
+
+
+      if (this.waitingText) {
+
+        this.waitingText.textContent =
+          "شارك الكود مع صاحبك";
+
+      }
 
     }
 
-    this.waitingScreen.classList.remove(
-      "hidden"
+
+    if (this.waitingScreen) {
+
+      this.waitingScreen.classList.remove(
+        "hidden"
+      );
+
+    }
+
+  },
+
+
+  watchRoom(roomCode) {
+
+    this.stopWatchingRoom();
+
+
+    const roomRef =
+      database.ref(
+        "gameV2/rooms/" + roomCode
+      );
+
+
+    this.roomListenerRef =
+      roomRef;
+
+
+    roomRef.on(
+      "value",
+      (snapshot) => {
+
+        if (!snapshot.exists()) {
+
+          if (
+            this.waitingScreen &&
+            this.currentRoomCode
+          ) {
+
+            this.waitingTitle.textContent =
+              "تم إغلاق الغرفة";
+
+            this.waitingText.textContent =
+              "رجع وأنشئ غرفة جديدة";
+
+          }
+
+          return;
+
+        }
+
+
+        const room =
+          snapshot.val();
+
+
+        if (
+          room.status === "ready" &&
+          room.playerCount >= 2
+        ) {
+
+          if (this.waitingTitle) {
+
+            this.waitingTitle.textContent =
+              "اللاعب الثاني دخل ✅";
+
+          }
+
+
+          if (this.waitingText) {
+
+            this.waitingText.textContent =
+              "اللاعبين بجوج متصلين";
+
+          }
+
+        }
+
+      }
     );
 
   },
-watchRoom(roomCode) {
 
-  const roomRef = database.ref(
-    "gameV2/rooms/" + roomCode
-  );
 
-  roomRef.on("value", (snapshot) => {
+  stopWatchingRoom() {
 
-    if (!snapshot.exists()) {
-      return;
-    }
+    if (this.roomListenerRef) {
 
-    const room = snapshot.val();
+      this.roomListenerRef.off();
 
-    if (
-      room.status === "ready" &&
-      room.playerCount >= 2
-    ) {
-
-      this.waitingTitle.textContent =
-        "اللاعب الثاني دخل ✅";
-
-      this.waitingText.textContent =
-        "اللاعبين بجوج متصلين";
+      this.roomListenerRef =
+        null;
 
     }
 
-  });
+  },
 
-},
 
   async cancelRoom() {
 
-    if (this.currentRoomCode) {
+    const roomCode =
+      this.currentRoomCode;
+
+
+    this.stopWatchingRoom();
+
+
+    if (roomCode) {
 
       try {
 
         await database
           .ref(
             "gameV2/rooms/" +
-            this.currentRoomCode
+            roomCode
           )
           .remove();
 
+
       } catch (error) {
 
-        console.error(error);
+        console.error(
+          "Cancel room error:",
+          error
+        );
 
       }
 
     }
 
-    this.currentRoomCode = null;
 
-    this.waitingScreen.classList.add(
-      "hidden"
-    );
+    this.currentRoomCode =
+      null;
 
-    this.status.textContent =
-      "جاهز للعب";
+
+    if (this.waitingScreen) {
+
+      this.waitingScreen.classList.add(
+        "hidden"
+      );
+
+    }
+
+
+    if (this.status) {
+
+      this.status.textContent =
+        "جاهز للعب";
+
+    }
 
   }
 
@@ -343,5 +658,9 @@ watchRoom(roomCode) {
 
 document.addEventListener(
   "DOMContentLoaded",
-  () => GameApp.init()
+  () => {
+
+    GameApp.init();
+
+  }
 );
