@@ -410,6 +410,7 @@
   class="game-screen app-hidden"
   id="gameScreen">
 
+
   <div class="game-room-label">
     ONLINE MATCH
   </div>
@@ -420,7 +421,31 @@
   </div>
 
 
+  <div class="game-round"
+       id="gameRound">
+    ROUND 1
+  </div>
+
+
+  <div class="game-score">
+
+    <span id="gameMyScore">
+      0
+    </span>
+
+    <span class="score-separator">
+      —
+    </span>
+
+    <span id="gameOpponentScore">
+      0
+    </span>
+
+  </div>
+
+
   <div class="players-versus">
+
 
     <div class="game-player-card">
 
@@ -446,7 +471,12 @@
     </div>
 
 
-    <div class="game-player-card">
+    <div class="game-player-card opponent-card">
+
+      <div class="opponent-ready game-ready-hidden"
+           id="opponentReady">
+        ✅
+      </div>
 
       <div
         class="game-player-avatar"
@@ -464,16 +494,85 @@
 
     </div>
 
+
   </div>
 
 
-  <div class="game-ready-title">
-    المباراة جاهزة 🔥
+  <div class="moves-display">
+
+    <div
+      class="selected-hand"
+      id="mySelectedMove">
+      ❔
+    </div>
+
+    <div class="moves-vs">
+      VS
+    </div>
+
+    <div
+      class="selected-hand"
+      id="opponentSelectedMove">
+      ❔
+    </div>
+
   </div>
 
-  <div class="game-ready-text">
-    اختار الحركة ديالك فالمرحلة الجاية
+
+  <div
+    class="game-status"
+    id="gameStatus">
+
+    اختار الحركة ديالك
+
   </div>
+
+
+  <div class="rps-choices">
+
+    <button
+      class="rps-choice"
+      data-move="rock"
+      type="button">
+
+      <span>✊</span>
+
+      <small>
+        حجر
+      </small>
+
+    </button>
+
+
+    <button
+      class="rps-choice"
+      data-move="paper"
+      type="button">
+
+      <span>🖐️</span>
+
+      <small>
+        ورق
+      </small>
+
+    </button>
+
+
+    <button
+      class="rps-choice"
+      data-move="scissors"
+      type="button">
+
+      <span>✌️</span>
+
+      <small>
+        مقص
+      </small>
+
+    </button>
+
+  </div>
+
 
 </section>
 
