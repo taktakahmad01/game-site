@@ -1,66 +1,94 @@
 const PlayerProfile = {
 
-  avatar: "👦",
+  currentUser: null,
+  profile: null,
+  selectedAvatar: "👦",
 
 
-  init() {
+  async init() {
 
-    this.screen =
-      document.getElementById(
-        "profileScreen"
+    try {
+
+      this.currentUser =
+        await GameAuth.init();
+
+      this.screen =
+        document.getElementById(
+          "profileScreen"
+        );
+
+      this.usernameInput =
+        document.getElementById(
+          "profileUsername"
+        );
+
+      this.countryInput =
+        document.getElementById(
+          "profileCountry"
+        );
+
+      this.message =
+        document.getElementById(
+          "profileMessage"
+        );
+
+      this.createButton =
+        document.getElementById(
+          "createProfile"
+        );
+
+      this.avatarButtons =
+        document.querySelectorAll(
+          ".avatar-choice"
+        );
+
+
+      this.bindAvatarEvents();
+
+
+      const profileRef =
+        database.ref(
+          "gameV2/users/" +
+          this.currentUser.uid
+        );
+
+
+      const snapshot =
+        await profileRef.once(
+          "value"
+        );
+
+
+      if (snapshot.exists()) {
+
+        this.profile =
+          snapshot.val();
+
+        this.hideProfileScreen();
+
+        this.dispatchReady();
+
+        return;
+
+      }
+
+
+      this.bindCreateButton();
+
+
+    } catch (error) {
+
+      console.error(
+        "Profile init error:",
+        error
       );
-
-    this.username =
-      document.getElementById(
-        "profileUsername"
-      );
-
-    this.country =
-      document.getElementById(
-        "profileCountry"
-      );
-
-    this.message =
-      document.getElementById(
-        "profileMessage"
-      );
-
-    this.createButton =
-      document.getElementById(
-        "createProfile"
-      );
-
-    this.avatarButtons =
-      document.querySelectorAll(
-        ".avatar-choice"
-      );
-
-
-    const savedProfile =
-      this.getProfile();
-
-
-    /*
-     * عندو Profile من قبل:
-     * ما نوريوش التسجيل.
-     */
-    if (savedProfile) {
-
-      this.screen.classList.add(
-        "profile-hidden"
-      );
-
-      return;
 
     }
-
-
-    this.bindEvents();
 
   },
 
 
-  bindEvents() {
+  bindAvatarEvents() {
 
     this.avatarButtons.forEach(
       (button) => {
@@ -85,7 +113,7 @@ const PlayerProfile = {
             );
 
 
-            this.avatar =
+            this.selectedAvatar =
               button.dataset.avatar;
 
           }
@@ -94,12 +122,21 @@ const PlayerProfile = {
       }
     );
 
+  },
+
+
+  bindCreateButton() {
+
+    if (!this.createButton) {
+      return;
+    }
+
 
     this.createButton.addEventListener(
       "click",
-      () => {
+      async () => {
 
-        this.createProfile();
+        await this.createProfile();
 
       }
     );
@@ -107,22 +144,43 @@ const PlayerProfile = {
   },
 
 
-  createProfile() {
+  async createProfile() {
 
     const username =
-      this.username.value.trim();
+      this.usernameInput
+        .value
+        .trim();
+
 
     const country =
-      this.country.value;
+      this.countryInput
+        .value;
 
 
     this.message.textContent = "";
 
 
-    if (username.length < 3) {
+    if (
+      username.length < 3 ||
+      username.length > 15
+    ) {
 
       this.message.textContent =
-        "الاسم خاصو يكون فيه على الأقل 3 حروف";
+        "الاسم خاصو يكون بين 3 و15 حرف";
+
+      return;
+
+    }
+
+
+    if (
+      !/^[a-zA-Z0-9_]+$/.test(
+        username
+      )
+    ) {
+
+      this.message.textContent =
+        "استعمل غير الحروف والأرقام و _";
 
       return;
 
@@ -139,37 +197,184 @@ const PlayerProfile = {
     }
 
 
-    const profile = {
-
-      username: username,
-
-      country: country,
-
-      avatar: this.avatar,
-
-      wins: 0,
-
-      createdAt: Date.now()
-
-    };
+    this.createButton.disabled =
+      true;
 
 
-    localStorage.setItem(
-      "playerProfile",
-      JSON.stringify(profile)
-    );
+    this.createButton.textContent =
+      "جاري إنشاء الحساب...";
 
 
-    this.screen.classList.add(
-      "profile-hidden"
-    );
+    const usernameKey =
+      username.toLowerCase();
 
+
+    const usernameRef =
+      database.ref(
+        "gameV2/usernames/" +
+        usernameKey
+      );
+
+
+    try {
+
+      let usernameTaken =
+        false;
+
+
+      const transactionResult =
+        await usernameRef.transaction(
+          (currentValue) => {
+
+            if (
+              currentValue === null
+            ) {
+
+              return this.currentUser.uid;
+
+            }
+
+
+            if (
+              currentValue ===
+              this.currentUser.uid
+            ) {
+
+              return currentValue;
+
+            }
+
+
+            usernameTaken = true;
+
+            return;
+
+          }
+        );
+
+
+      if (
+        usernameTaken ||
+        !transactionResult.committed
+      ) {
+
+        this.message.textContent =
+          "هاد Username مستعمل من قبل";
+
+        return;
+
+      }
+
+
+      const profile = {
+
+        username: username,
+
+        avatar:
+          this.selectedAvatar,
+
+        country: country,
+
+        wins: 0,
+
+        online: true,
+
+        status: "online",
+
+        currentRoom: null,
+
+        lastSeen:
+          firebase.database
+            .ServerValue
+            .TIMESTAMP,
+
+        createdAt:
+          firebase.database
+            .ServerValue
+            .TIMESTAMP
+
+      };
+
+
+      await database
+        .ref(
+          "gameV2/users/" +
+          this.currentUser.uid
+        )
+        .set(profile);
+
+
+      const freshProfile =
+        await database
+          .ref(
+            "gameV2/users/" +
+            this.currentUser.uid
+          )
+          .once("value");
+
+
+      this.profile =
+        freshProfile.val();
+
+
+      this.hideProfileScreen();
+
+
+      this.dispatchReady();
+
+
+    } catch (error) {
+
+      console.error(
+        "Create profile error:",
+        error
+      );
+
+
+      this.message.textContent =
+        "وقع مشكل، عاود جرب";
+
+
+    } finally {
+
+      this.createButton.disabled =
+        false;
+
+
+      this.createButton.textContent =
+        "دخول للعبة";
+
+    }
+
+  },
+
+
+  hideProfileScreen() {
+
+    if (this.screen) {
+
+      this.screen.classList.add(
+        "profile-hidden"
+      );
+
+    }
+
+  },
+
+
+  dispatchReady() {
 
     window.dispatchEvent(
       new CustomEvent(
         "playerProfileReady",
         {
-          detail: profile
+          detail: {
+            uid:
+              this.currentUser.uid,
+
+            profile:
+              this.profile
+          }
         }
       )
     );
@@ -179,31 +384,16 @@ const PlayerProfile = {
 
   getProfile() {
 
-    try {
+    return this.profile;
 
-      const saved =
-        localStorage.getItem(
-          "playerProfile"
-        );
+  },
 
 
-      if (!saved) {
-        return null;
-      }
+  getUid() {
 
-
-      return JSON.parse(saved);
-
-
-    } catch (error) {
-
-      localStorage.removeItem(
-        "playerProfile"
-      );
-
-      return null;
-
-    }
+    return this.currentUser
+      ? this.currentUser.uid
+      : null;
 
   }
 
