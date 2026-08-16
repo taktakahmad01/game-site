@@ -1751,3 +1751,64 @@ select.profile-field option{
 .leave-game-btn:active {
   transform: scale(0.98);
 }
+
+
+/* ===== GAME MESSAGE ===== */
+
+.game-message-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 24px;
+
+  background: rgba(5, 12, 22, 0.88);
+  backdrop-filter: blur(8px);
+}
+
+.game-message-overlay.app-hidden {
+  display: none !important;
+}
+
+.game-message-box {
+  width: 100%;
+  max-width: 380px;
+
+  padding: 38px 24px;
+
+  border-radius: 28px;
+
+  text-align: center;
+
+  background: #14243a;
+
+  border: 1px solid rgba(255,255,255,0.10);
+
+  box-shadow: 0 25px 70px rgba(0,0,0,0.40);
+}
+
+.game-message-icon {
+  font-size: 60px;
+}
+
+.game-message-title {
+  margin-top: 18px;
+
+  color: #ffffff;
+
+  font-size: 25px;
+  font-weight: 900;
+}
+
+.game-message-text {
+  margin-top: 10px;
+
+  color: #91a1b6;
+
+  font-size: 14px;
+  font-weight: 600;
+}
