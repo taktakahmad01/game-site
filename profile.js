@@ -61,8 +61,8 @@ const PlayerProfile = {
     try {
 
       this.setLoaderText(
-        "جاري تسجيل الدخول..."
-      );
+        "جاري التحميل...")
+        ;
 
 
       this.currentUser =
@@ -70,8 +70,7 @@ const PlayerProfile = {
 
 
       this.setLoaderText(
-        "جاري تحميل حسابك..."
-      );
+        "جاري التحميل...");
 
 
       const profileRef =
