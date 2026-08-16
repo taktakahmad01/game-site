@@ -3,6 +3,9 @@ const OnlineGame = {
   uid: null,
   opponentUid: null,
 
+  myPresenceRef: null,
+opponentPresenceRef: null,
+
   roomId: null,
   roomRef: null,
 
@@ -156,6 +159,7 @@ const OnlineGame = {
 
         return;
       }
+      this.watchGamePresence();
 
 
       /*
