@@ -9,7 +9,7 @@
 
 <body>
 
-  <main class="home">
+  <main class="home" id="homeScreen">
 
     <div class="logo">🎮</div>
 
@@ -37,13 +37,98 @@
 
   </main>
 
+
+  <!-- JOIN ROOM MODAL -->
+
+  <div class="game-modal hidden" id="joinModal">
+
+    <div class="modal-card">
+
+      <button class="modal-close" id="closeJoinModal">
+        ×
+      </button>
+
+      <div class="modal-icon">
+        🔗
+      </div>
+
+      <h2>دخول للغرفة</h2>
+
+      <p>
+        دخل الكود اللي عطاك صاحبك
+      </p>
+
+      <input
+        id="roomCodeInput"
+        class="room-input"
+        type="text"
+        maxlength="6"
+        autocomplete="off"
+        placeholder="ABC123"
+      >
+
+      <div class="modal-error" id="joinError"></div>
+
+      <button class="primary-btn modal-action" id="confirmJoin">
+        دخول
+      </button>
+
+    </div>
+
+  </div>
+
+
+  <!-- ROOM WAITING SCREEN -->
+
+  <section class="waiting-screen hidden" id="waitingScreen">
+
+    <div class="waiting-content">
+
+      <div class="waiting-icon">
+        🎮
+      </div>
+
+      <div class="waiting-label">
+        ROOM CODE
+      </div>
+
+      <div class="room-code-big" id="waitingRoomCode">
+        ------
+      </div>
+
+      <div class="copy-hint">
+        شارك هاد الكود مع صاحبك
+      </div>
+
+      <div class="waiting-animation">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+
+      <h2 id="waitingTitle">
+        كنستناو اللاعب الثاني...
+      </h2>
+
+      <p id="waitingText">
+        خلي هاد الصفحة محلولة
+      </p>
+
+      <button class="cancel-btn" id="cancelRoom">
+        إلغاء الغرفة
+      </button>
+
+    </div>
+
+  </section>
+
+
   <!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
 
-<script src="firebase.js"></script>
-<script src="core.js"></script>
-
+  <script src="firebase.js"></script>
+  <script src="core.js"></script>
 
 </body>
 </html>
