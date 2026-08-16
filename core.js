@@ -1,115 +1,69 @@
-// Game Site - Core
-
 const GameApp = {
-
-  version: "1.1.0",
 
   currentRoomCode: null,
 
   init() {
 
-    this.createBtn =
-      document.getElementById("createGame");
+    this.createBtn = document.getElementById("createGame");
+    this.joinBtn = document.getElementById("joinGame");
+    this.status = document.getElementById("status");
 
-    this.joinBtn =
-      document.getElementById("joinGame");
+    this.joinModal = document.getElementById("joinModal");
+    this.closeJoinModalBtn = document.getElementById("closeJoinModal");
+    this.roomCodeInput = document.getElementById("roomCodeInput");
+    this.confirmJoinBtn = document.getElementById("confirmJoin");
+    this.joinError = document.getElementById("joinError");
 
-    this.status =
-      document.getElementById("status");
+    this.waitingScreen = document.getElementById("waitingScreen");
+    this.waitingRoomCode = document.getElementById("waitingRoomCode");
+    this.waitingTitle = document.getElementById("waitingTitle");
+    this.waitingText = document.getElementById("waitingText");
+    this.cancelRoomBtn = document.getElementById("cancelRoom");
 
-    this.joinModal =
-      document.getElementById("joinModal");
+    this.createBtn.addEventListener("click", () => {
+      this.createRoom();
+    });
 
-    this.closeJoinModalBtn =
-      document.getElementById("closeJoinModal");
+    this.joinBtn.addEventListener("click", () => {
+      this.openJoinModal();
+    });
 
-    this.roomCodeInput =
-      document.getElementById("roomCodeInput");
+    this.closeJoinModalBtn.addEventListener("click", () => {
+      this.closeJoinModal();
+    });
 
-    this.confirmJoinBtn =
-      document.getElementById("confirmJoin");
+    this.confirmJoinBtn.addEventListener("click", () => {
+      this.joinRoom();
+    });
 
-    this.joinError =
-      document.getElementById("joinError");
+    this.cancelRoomBtn.addEventListener("click", () => {
+      this.cancelRoom();
+    });
 
-    this.waitingScreen =
-      document.getElementById("waitingScreen");
+    this.roomCodeInput.addEventListener("input", () => {
 
-    this.waitingRoomCode =
-      document.getElementById("waitingRoomCode");
+      this.roomCodeInput.value =
+        this.roomCodeInput.value
+          .toUpperCase()
+          .replace(/[^A-Z0-9]/g, "");
 
-    this.waitingTitle =
-      document.getElementById("waitingTitle");
+      this.joinError.textContent = "";
 
-    this.waitingText =
-      document.getElementById("waitingText");
-
-    this.cancelRoomBtn =
-      document.getElementById("cancelRoom");
-
-
-    this.createBtn.addEventListener(
-      "click",
-      () => this.createRoom()
-    );
-
-
-    this.joinBtn.addEventListener(
-      "click",
-      () => this.openJoinModal()
-    );
-
-
-    this.closeJoinModalBtn.addEventListener(
-      "click",
-      () => this.closeJoinModal()
-    );
-
-
-    this.confirmJoinBtn.addEventListener(
-      "click",
-      () => this.joinRoomFromInput()
-    );
-
-
-    this.cancelRoomBtn.addEventListener(
-      "click",
-      () => this.cancelRoom()
-    );
-
-
-    this.roomCodeInput.addEventListener(
-      "input",
-      () => {
-
-        this.roomCodeInput.value =
-          this.roomCodeInput.value
-            .toUpperCase()
-            .replace(/[^A-Z0-9]/g, "");
-
-        this.joinError.textContent = "";
-
-      }
-    );
+    });
 
   },
 
 
   generateRoomCode() {
 
-    const chars =
-      "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
     let code = "";
 
-    for(let i = 0; i < 6; i++){
-
+    for (let i = 0; i < 6; i++) {
       code += chars.charAt(
-        Math.floor(
-          Math.random() * chars.length
-        )
+        Math.floor(Math.random() * chars.length)
       );
-
     }
 
     return code;
@@ -119,17 +73,15 @@ const GameApp = {
 
   async createUniqueRoomCode() {
 
-    while(true){
+    while (true) {
 
-      const code =
-        this.generateRoomCode();
+      const code = this.generateRoomCode();
 
-      const snapshot =
-        await database
-          .ref("gameV2/rooms/" + code)
-          .once("value");
+      const snap = await database
+        .ref("gameV2/rooms/" + code)
+        .once("value");
 
-      if(!snapshot.exists()){
+      if (!snap.exists()) {
         return code;
       }
 
@@ -142,43 +94,32 @@ const GameApp = {
 
     try {
 
-      this.status.textContent =
-        "Creating room...";
-
+      this.status.textContent = "Creating room...";
 
       const roomCode =
         await this.createUniqueRoomCode();
-
 
       await database
         .ref("gameV2/rooms/" + roomCode)
         .set({
 
-          code:roomCode,
-
-          status:"waiting",
-
-          playerCount:1,
+          code: roomCode,
+          status: "waiting",
+          playerCount: 1,
 
           createdAt:
-            firebase.database
-              .ServerValue
-              .TIMESTAMP
+            firebase.database.ServerValue.TIMESTAMP
 
         });
 
-
-      this.currentRoomCode =
-        roomCode;
-
+      this.currentRoomCode = roomCode;
 
       this.showWaitingRoom(
         roomCode,
         false
       );
 
-
-    } catch(error) {
+    } catch (error) {
 
       console.error(error);
 
@@ -196,50 +137,40 @@ const GameApp = {
 
     this.joinError.textContent = "";
 
-    this.joinModal.classList.remove(
-      "hidden"
-    );
+    this.joinModal.classList.remove("hidden");
 
-    setTimeout(
-      () => this.roomCodeInput.focus(),
-      150
-    );
+    setTimeout(() => {
+      this.roomCodeInput.focus();
+    }, 150);
 
   },
 
 
   closeJoinModal() {
 
-    this.joinModal.classList.add(
-      "hidden"
-    );
+    this.joinModal.classList.add("hidden");
 
   },
 
 
-  async joinRoomFromInput() {
+  async joinRoom() {
 
     const roomCode =
       this.roomCodeInput.value
         .trim()
         .toUpperCase();
 
-
-    if(roomCode.length !== 6){
+    if (roomCode.length !== 6) {
 
       this.joinError.textContent =
-        "دخل كود صحيح من 6 حروف";
+        "دخل الكود المكوّن من 6 حروف";
 
       return;
 
     }
 
-
     this.confirmJoinBtn.disabled = true;
-
-    this.confirmJoinBtn.textContent =
-      "جاري الدخول...";
-
+    this.confirmJoinBtn.textContent = "جاري الدخول...";
 
     try {
 
@@ -248,12 +179,10 @@ const GameApp = {
           "gameV2/rooms/" + roomCode
         );
 
-
-      const snapshot =
+      const snap =
         await roomRef.once("value");
 
-
-      if(!snapshot.exists()){
+      if (!snap.exists()) {
 
         this.joinError.textContent =
           "هاد الغرفة ما كايناش";
@@ -262,25 +191,18 @@ const GameApp = {
 
       }
 
+      const room = snap.val();
 
-      const room =
-        snapshot.val();
-
-
-      if(room.status !== "waiting"){
+      if (room.status !== "waiting") {
 
         this.joinError.textContent =
-          "الغرفة ما بقاتش متاحة";
+          "هاد الغرفة ما بقاتش متاحة";
 
         return;
 
       }
 
-
-      if(
-        room.playerCount &&
-        room.playerCount >= 2
-      ){
+      if (room.playerCount >= 2) {
 
         this.joinError.textContent =
           "الغرفة عامرة";
@@ -289,35 +211,26 @@ const GameApp = {
 
       }
 
-
       await roomRef.update({
 
-        status:"ready",
-
-        playerCount:2,
+        status: "ready",
+        playerCount: 2,
 
         joinedAt:
-          firebase.database
-            .ServerValue
-            .TIMESTAMP
+          firebase.database.ServerValue.TIMESTAMP
 
       });
 
-
-      this.currentRoomCode =
-        roomCode;
-
+      this.currentRoomCode = roomCode;
 
       this.closeJoinModal();
-
 
       this.showWaitingRoom(
         roomCode,
         true
       );
 
-
-    } catch(error) {
+    } catch (error) {
 
       console.error(error);
 
@@ -326,27 +239,20 @@ const GameApp = {
 
     } finally {
 
-      this.confirmJoinBtn.disabled =
-        false;
-
-      this.confirmJoinBtn.textContent =
-        "دخول";
+      this.confirmJoinBtn.disabled = false;
+      this.confirmJoinBtn.textContent = "دخول";
 
     }
 
   },
 
 
-  showWaitingRoom(
-    roomCode,
-    joined
-  ) {
+  showWaitingRoom(roomCode, joined) {
 
     this.waitingRoomCode.textContent =
       roomCode;
 
-
-    if(joined){
+    if (joined) {
 
       this.waitingTitle.textContent =
         "تم الدخول للغرفة ✅";
@@ -360,10 +266,9 @@ const GameApp = {
         "كنستناو اللاعب الثاني...";
 
       this.waitingText.textContent =
-        "خلي هاد الصفحة محلولة";
+        "شارك الكود مع صاحبك";
 
     }
-
 
     this.waitingScreen.classList.remove(
       "hidden"
@@ -374,7 +279,7 @@ const GameApp = {
 
   async cancelRoom() {
 
-    if(this.currentRoomCode){
+    if (this.currentRoomCode) {
 
       try {
 
@@ -385,14 +290,13 @@ const GameApp = {
           )
           .remove();
 
-      } catch(error){
+      } catch (error) {
 
         console.error(error);
 
       }
 
     }
-
 
     this.currentRoomCode = null;
 
