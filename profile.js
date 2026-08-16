@@ -59,6 +59,11 @@ const PlayerProfile = {
         );
 
 
+      /*
+       * عندو Profile من قبل
+       * ندخلو مباشرة بلا ما تبان
+       * شاشة Create Profile نهائيا
+       */
       if (snapshot.exists()) {
 
         this.profile =
@@ -72,6 +77,12 @@ const PlayerProfile = {
 
       }
 
+
+      /*
+       * ما عندوش Profile
+       * دابا فقط نوري التسجيل
+       */
+      this.showProfileScreen();
 
       this.bindCreateButton();
 
@@ -349,6 +360,19 @@ const PlayerProfile = {
   },
 
 
+  showProfileScreen() {
+
+    if (this.screen) {
+
+      this.screen.classList.remove(
+        "profile-hidden"
+      );
+
+    }
+
+  },
+
+
   hideProfileScreen() {
 
     if (this.screen) {
@@ -369,11 +393,13 @@ const PlayerProfile = {
         "playerProfileReady",
         {
           detail: {
+
             uid:
               this.currentUser.uid,
 
             profile:
               this.profile
+
           }
         }
       )
