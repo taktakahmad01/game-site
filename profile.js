@@ -7,43 +7,71 @@ const PlayerProfile = {
 
   async init() {
 
+    this.loader =
+      document.getElementById(
+        "appLoader"
+      );
+
+    this.loaderText =
+      document.getElementById(
+        "loaderText"
+      );
+
+    this.homeScreen =
+      document.getElementById(
+        "homeScreen"
+      );
+
+    this.screen =
+      document.getElementById(
+        "profileScreen"
+      );
+
+    this.usernameInput =
+      document.getElementById(
+        "profileUsername"
+      );
+
+    this.countryInput =
+      document.getElementById(
+        "profileCountry"
+      );
+
+    this.message =
+      document.getElementById(
+        "profileMessage"
+      );
+
+    this.createButton =
+      document.getElementById(
+        "createProfile"
+      );
+
+    this.avatarButtons =
+      document.querySelectorAll(
+        ".avatar-choice"
+      );
+
+
+    this.bindAvatarEvents();
+
+    this.bindCreateButton();
+
+
     try {
+
+      this.setLoaderText(
+        "جاري تسجيل الدخول..."
+      );
+
 
       this.currentUser =
         await GameAuth.init();
 
-      this.screen =
-        document.getElementById(
-          "profileScreen"
-        );
 
-      this.usernameInput =
-        document.getElementById(
-          "profileUsername"
-        );
-
-      this.countryInput =
-        document.getElementById(
-          "profileCountry"
-        );
-
-      this.message =
-        document.getElementById(
-          "profileMessage"
-        );
-
-      this.createButton =
-        document.getElementById(
-          "createProfile"
-        );
-
-      this.avatarButtons =
-        document.querySelectorAll(
-          ".avatar-choice"
-        );
-
-
-      this.bindAvatarEvents();
+      this.setLoaderText(
+        "جاري تحميل حسابك..."
+      );
 
 
       const profileRef =
@@ -60,18 +88,22 @@ const PlayerProfile = {
 
 
       /*
-       * عندو Profile من قبل
-       * ندخلو مباشرة بلا ما تبان
-       * شاشة Create Profile نهائيا
+       * عندو حساب
        */
       if (snapshot.exists()) {
 
         this.profile =
           snapshot.val();
 
+
         this.hideProfileScreen();
 
+
+        this.showHome();
+
+
         this.dispatchReady();
+
 
         return;
 
@@ -79,12 +111,13 @@ const PlayerProfile = {
 
 
       /*
-       * ما عندوش Profile
-       * دابا فقط نوري التسجيل
+       * ما عندوش حساب
        */
-      this.showProfileScreen();
+      this.hideHome();
 
-      this.bindCreateButton();
+      this.hideLoader();
+
+      this.showProfileScreen();
 
 
     } catch (error) {
@@ -92,6 +125,11 @@ const PlayerProfile = {
       console.error(
         "Profile init error:",
         error
+      );
+
+
+      this.setLoaderText(
+        "وقع مشكل فالاتصال"
       );
 
     }
@@ -315,7 +353,7 @@ const PlayerProfile = {
         .set(profile);
 
 
-      const freshProfile =
+      const freshSnapshot =
         await database
           .ref(
             "gameV2/users/" +
@@ -325,13 +363,31 @@ const PlayerProfile = {
 
 
       this.profile =
-        freshProfile.val();
+        freshSnapshot.val();
 
 
       this.hideProfileScreen();
 
 
+      this.showLoader();
+
+
+      this.setLoaderText(
+        "جاري تجهيز حسابك..."
+      );
+
+
       this.dispatchReady();
+
+
+      setTimeout(
+        () => {
+
+          this.showHome();
+
+        },
+        300
+      );
 
 
     } catch (error) {
@@ -354,6 +410,71 @@ const PlayerProfile = {
 
       this.createButton.textContent =
         "دخول للعبة";
+
+    }
+
+  },
+
+
+  showHome() {
+
+    if (this.homeScreen) {
+
+      this.homeScreen.classList.remove(
+        "app-hidden"
+      );
+
+    }
+
+
+    this.hideLoader();
+
+  },
+
+
+  hideHome() {
+
+    if (this.homeScreen) {
+
+      this.homeScreen.classList.add(
+        "app-hidden"
+      );
+
+    }
+
+  },
+
+
+  showLoader() {
+
+    if (this.loader) {
+
+      this.loader.style.display =
+        "flex";
+
+    }
+
+  },
+
+
+  hideLoader() {
+
+    if (this.loader) {
+
+      this.loader.style.display =
+        "none";
+
+    }
+
+  },
+
+
+  setLoaderText(text) {
+
+    if (this.loaderText) {
+
+      this.loaderText.textContent =
+        text;
 
     }
 
