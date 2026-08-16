@@ -135,34 +135,169 @@
   </div>
 
 </section>
-  <main class="home" id="homeScreen">
+  
+<main class="home" id="homeScreen">
 
-    <div class="logo">🎮</div>
+  <div class="home-top">
 
-    <h1>PLAY TOGETHER</h1>
+    <div class="player-box">
 
-    <p class="subtitle">
-      العب مع صحابك مباشرة أونلاين
-    </p>
+      <div class="home-avatar" id="homeAvatar">
+        👦
+      </div>
 
-    <div class="menu">
+      <div class="player-info">
 
-      <button class="primary-btn" id="createGame">
-        إنشاء لعبة
-      </button>
+        <div class="home-username" id="homeUsername">
+          Player
+        </div>
 
-      <button class="secondary-btn" id="joinGame">
-        دخول بكود
-      </button>
+        <div class="home-country" id="homeCountry">
+          🌍 Country
+        </div>
+
+      </div>
 
     </div>
 
-    <p class="status" id="status">
-      جاهز للعب
+    <div class="online-badge">
+      <span class="online-dot"></span>
+      ONLINE
+    </div>
+
+  </div>
+
+
+  <div class="wins-card">
+
+    <div class="wins-icon">
+      🏆
+    </div>
+
+    <div>
+      <div class="wins-number" id="homeWins">
+        0
+      </div>
+
+      <div class="wins-label">
+        WINS
+      </div>
+    </div>
+
+  </div>
+
+
+  <div class="home-title">
+
+    <h1>
+      PLAY TOGETHER
+    </h1>
+
+    <p>
+      اختار كيفاش بغيتي تلعب
     </p>
 
-  </main>
+  </div>
 
+
+  <div class="game-menu">
+
+    <button
+      class="game-mode play-online"
+      id="playOnline"
+      type="button">
+
+      <div class="mode-icon">
+        ⚡
+      </div>
+
+      <div class="mode-text">
+
+        <strong>
+          PLAY ONLINE
+        </strong>
+
+        <span>
+          قلب على لاعب Online
+        </span>
+
+      </div>
+
+      <div class="mode-arrow">
+        ›
+      </div>
+
+    </button>
+
+
+    <div class="room-box">
+
+      <div class="room-title">
+        العب مع صاحبك
+      </div>
+
+      <div class="room-buttons">
+
+        <button
+          class="create-room-btn"
+          id="createGame"
+          type="button">
+
+          <span>＋</span>
+          CREATE ROOM
+
+        </button>
+
+        <button
+          class="join-room-btn"
+          id="joinGame"
+          type="button">
+
+          <span>#</span>
+          JOIN ROOM
+
+        </button>
+
+      </div>
+
+    </div>
+
+
+    <button
+      class="game-mode bot-mode"
+      id="playBot"
+      type="button">
+
+      <div class="mode-icon">
+        🤖
+      </div>
+
+      <div class="mode-text">
+
+        <strong>
+          PLAY VS BOT
+        </strong>
+
+        <span>
+          تدريب Offline ضد Bot
+        </span>
+
+      </div>
+
+      <div class="mode-arrow">
+        ›
+      </div>
+
+    </button>
+
+  </div>
+
+
+  <div class="home-status" id="status">
+    جاهز للعب
+  </div>
+
+</main>
 
   <!-- JOIN ROOM MODAL -->
 
