@@ -4,7 +4,7 @@ const OnlineGame = {
   opponentUid: null,
 
   myPresenceRef: null,
-opponentPresenceRef: null,
+  opponentPresenceRef: null,
 
   roomId: null,
   roomRef: null,
@@ -19,6 +19,11 @@ opponentPresenceRef: null,
   resolving: false,
   nextRoundTimer: null,
   lastScheduledRound: null,
+
+  leaving: false,
+  matchFinished: false,
+  cleanupStarted: false,
+  winClaimStarted: false,
 
 
   async init() {
@@ -159,14 +164,11 @@ opponentPresenceRef: null,
 
         return;
       }
+
+
       this.watchGamePresence();
+      this.bindLeaveButton();
 
-
-      /*
-       * واحد فقط من الجوج هو اللي
-       * غادي يحسب النتيجة.
-       * هكا ما تتحسبش مرتين.
-       */
 
       const sortedUids =
         [...playerUids].sort();
@@ -236,9 +238,7 @@ opponentPresenceRef: null,
 
 
     if (!room.round) {
-
       updates["round"] = 1;
-
     }
 
 
@@ -299,29 +299,20 @@ opponentPresenceRef: null,
 
 
     if (homeScreen) {
-
       homeScreen.classList.add(
         "app-hidden"
       );
-
     }
 
 
     if (waitingScreen) {
-
       waitingScreen.classList.add(
         "hidden"
       );
-
     }
 
 
     if (!gameScreen) {
-
-      console.error(
-        "gameScreen HTML not found"
-      );
-
       return;
     }
 
@@ -405,11 +396,6 @@ opponentPresenceRef: null,
     buttons.forEach(
       button => {
 
-        /*
-         * ما نربطوش نفس الزر مرتين
-         * إلا رجع اللاعب للشاشة.
-         */
-
         if (
           button.dataset.bound ===
           "yes"
@@ -429,7 +415,6 @@ opponentPresenceRef: null,
             const move =
               button.dataset.move;
 
-
             await this.chooseMove(
               move
             );
@@ -443,11 +428,113 @@ opponentPresenceRef: null,
   },
 
 
+  bindLeaveButton() {
+
+    const button =
+      document.getElementById(
+        "leaveGameBtn"
+      );
+
+
+    if (!button) {
+      return;
+    }
+
+
+    if (
+      button.dataset.bound ===
+      "yes"
+    ) {
+      return;
+    }
+
+
+    button.dataset.bound =
+      "yes";
+
+
+    button.addEventListener(
+      "click",
+      () => {
+
+        this.leaveMatch();
+
+      }
+    );
+
+  },
+
+
+  async leaveMatch() {
+
+    if (
+      !this.roomId ||
+      this.leaving ||
+      this.matchFinished
+    ) {
+      return;
+    }
+
+
+    this.leaving = true;
+
+
+    try {
+
+      const updates = {};
+
+
+      updates[
+        "gameV2/rooms/" +
+        this.roomId
+      ] = null;
+
+
+      updates[
+        "gameV2/matchAssignments/" +
+        this.uid
+      ] = null;
+
+
+      if (this.opponentUid) {
+
+        updates[
+          "gameV2/matchAssignments/" +
+          this.opponentUid
+        ] = null;
+
+      }
+
+
+      await database
+        .ref()
+        .update(updates);
+
+
+      this.exitToHome();
+
+
+    } catch (error) {
+
+      console.error(
+        "Leave game error:",
+        error
+      );
+
+
+      this.leaving = false;
+
+    }
+
+  },
+
+
   async chooseMove(move) {
 
     if (
       !this.roomId ||
-      this.myMove
+      this.myMove ||
+      this.matchFinished
     ) {
       return;
     }
@@ -464,8 +551,7 @@ opponentPresenceRef: null,
     }
 
 
-    this.myMove =
-      move;
+    this.myMove = move;
 
 
     this.disableChoices();
@@ -478,10 +564,8 @@ opponentPresenceRef: null,
 
 
     if (myHand) {
-
       myHand.textContent =
         this.moveEmoji(move);
-
     }
 
 
@@ -492,10 +576,8 @@ opponentPresenceRef: null,
 
 
     if (status) {
-
       status.textContent =
         "كنستناو اختيار الخصم...";
-
     }
 
 
@@ -542,9 +624,7 @@ opponentPresenceRef: null,
   watchRoom(roomId) {
 
     if (this.roomRef) {
-
       this.roomRef.off();
-
     }
 
 
@@ -561,7 +641,36 @@ opponentPresenceRef: null,
 
         if (!snapshot.exists()) {
 
-          this.exitToHome();
+          if (this.leaving) {
+
+            this.exitToHome();
+            return;
+
+          }
+
+
+          if (this.matchFinished) {
+            return;
+          }
+
+
+          this.showGameMessage(
+            "👋",
+            "الخصم خرج من المباراة",
+            "غادي نرجعوك للصفحة الرئيسية"
+          );
+
+
+          setTimeout(
+            () => {
+
+              this.hideGameMessage();
+              this.exitToHome();
+
+            },
+            1800
+          );
+
 
           return;
         }
@@ -577,8 +686,8 @@ opponentPresenceRef: null,
         ) {
 
           this.exitToHome();
-
           return;
+
         }
 
 
@@ -586,11 +695,6 @@ opponentPresenceRef: null,
           room
         );
 
-
-        /*
-         * غير Resolver هو اللي
-         * كيحسب نتيجة الجولة.
-         */
 
         if (this.isResolver) {
 
@@ -614,10 +718,6 @@ opponentPresenceRef: null,
       );
 
 
-    /*
-     * جولة جديدة
-     */
-
     if (
       round !==
       this.currentRound
@@ -625,7 +725,6 @@ opponentPresenceRef: null,
 
       this.currentRound =
         round;
-
 
       this.resetRoundUI();
 
@@ -639,16 +738,10 @@ opponentPresenceRef: null,
 
 
     if (roundText) {
-
       roundText.textContent =
         "ROUND " + round;
-
     }
 
-
-    /*
-     * SCORE
-     */
 
     const myScore =
       room.scores
@@ -690,6 +783,24 @@ opponentPresenceRef: null,
       opponentScore;
 
 
+    /*
+     * الماتش سالا
+     */
+    if (
+      room.status ===
+      "finished" &&
+      room.matchResult
+    ) {
+
+      this.finishMatch(
+        room.matchResult
+      );
+
+      return;
+
+    }
+
+
     const myMoveData =
       room.moves
       ?
@@ -710,12 +821,6 @@ opponentPresenceRef: null,
       null;
 
 
-    /*
-     * إلا النتيجة واجدة:
-     * ما نظهروش Done.
-     * مباشرة النتيجة.
-     */
-
     if (room.roundResult) {
 
       this.renderResult(
@@ -727,11 +832,6 @@ opponentPresenceRef: null,
     }
 
 
-    /*
-     * الخصم سبقني واختار:
-     * نوري غير ✅
-     */
-
     if (
       opponentMoveData &&
       !myMoveData
@@ -741,10 +841,6 @@ opponentPresenceRef: null,
 
     }
 
-
-    /*
-     * أنا اخترت والخصم باقي:
-     */
 
     if (
       myMoveData &&
@@ -758,20 +854,12 @@ opponentPresenceRef: null,
 
 
       if (status) {
-
         status.textContent =
           "كنستناو اختيار الخصم...";
-
       }
 
     }
 
-
-    /*
-     * بجوج اختارو:
-     * ما نظهروش ✅ بجوج.
-     * نخليو resolver يحسب النتيجة.
-     */
 
     if (
       myMoveData &&
@@ -785,10 +873,8 @@ opponentPresenceRef: null,
 
 
       if (status) {
-
         status.textContent =
           "جاري حساب النتيجة...";
-
       }
 
     }
@@ -823,10 +909,8 @@ opponentPresenceRef: null,
 
 
     if (status) {
-
       status.textContent =
         "الخصم سبقك واختار";
-
     }
 
   },
@@ -837,6 +921,7 @@ opponentPresenceRef: null,
     if (
       this.resolving ||
       room.roundResult ||
+      room.status === "finished" ||
       !room.moves
     ) {
       return;
@@ -913,9 +998,7 @@ opponentPresenceRef: null,
       winnerUid ===
       this.uid
     ) {
-
       myScore++;
-
     }
 
 
@@ -923,10 +1006,16 @@ opponentPresenceRef: null,
       winnerUid ===
       this.opponentUid
     ) {
-
       opponentScore++;
-
     }
+
+
+    const matchWinnerUid =
+      myScore >= 5
+        ? this.uid
+        : opponentScore >= 5
+          ? this.opponentUid
+          : null;
 
 
     const updates = {};
@@ -976,6 +1065,37 @@ opponentPresenceRef: null,
     };
 
 
+    if (matchWinnerUid) {
+
+      updates["status"] =
+        "finished";
+
+
+      updates["matchResult"] = {
+
+        winnerUid:
+          matchWinnerUid,
+
+        finalScore: {
+
+          [this.uid]:
+            myScore,
+
+          [this.opponentUid]:
+            opponentScore
+
+        },
+
+        finishedAt:
+          firebase.database
+            .ServerValue
+            .TIMESTAMP
+
+      };
+
+    }
+
+
     try {
 
       await database
@@ -992,7 +1112,6 @@ opponentPresenceRef: null,
         "Resolve round error:",
         error
       );
-
 
       this.resolving = false;
 
@@ -1013,11 +1132,9 @@ opponentPresenceRef: null,
 
 
     if (opponentReady) {
-
       opponentReady.classList.add(
         "game-ready-hidden"
       );
-
     }
 
 
@@ -1054,22 +1171,16 @@ opponentPresenceRef: null,
 
 
     if (myHand) {
-
       myHand.textContent =
-        this.moveEmoji(
-          myMove
-        );
-
+        this.moveEmoji(myMove);
     }
 
 
     if (opponentHand) {
-
       opponentHand.textContent =
         this.moveEmoji(
           opponentMove
         );
-
     }
 
 
@@ -1113,15 +1224,11 @@ opponentPresenceRef: null,
     }
 
 
-    /*
-     * غير Resolver كيبدأ
-     * الجولة الجديدة.
-     */
-
     if (
       this.isResolver &&
       this.lastScheduledRound !==
-      result.round
+      result.round &&
+      !this.matchFinished
     ) {
 
       this.lastScheduledRound =
@@ -1149,6 +1256,11 @@ opponentPresenceRef: null,
     finishedRound
   ) {
 
+    if (this.matchFinished) {
+      return;
+    }
+
+
     try {
 
       const roomRef =
@@ -1165,14 +1277,20 @@ opponentPresenceRef: null,
 
 
       if (!snapshot.exists()) {
-
         return;
-
       }
 
 
       const room =
         snapshot.val();
+
+
+      if (
+        room.status ===
+        "finished"
+      ) {
+        return;
+      }
 
 
       if (
@@ -1184,9 +1302,7 @@ opponentPresenceRef: null,
           finishedRound
         )
       ) {
-
         return;
-
       }
 
 
@@ -1217,9 +1333,7 @@ opponentPresenceRef: null,
         error
       );
 
-
-      this.resolving =
-        false;
+      this.resolving = false;
 
     }
 
@@ -1261,27 +1375,19 @@ opponentPresenceRef: null,
 
 
     if (myHand) {
-
-      myHand.textContent =
-        "❔";
-
+      myHand.textContent = "❔";
     }
 
 
     if (opponentHand) {
-
-      opponentHand.textContent =
-        "❔";
-
+      opponentHand.textContent = "❔";
     }
 
 
     if (opponentReady) {
-
       opponentReady.classList.add(
         "game-ready-hidden"
       );
-
     }
 
 
@@ -1343,37 +1449,27 @@ opponentPresenceRef: null,
   ) {
 
     if (move1 === move2) {
-
       return null;
-
     }
 
 
     if (
-
       (
         move1 === "rock" &&
         move2 === "scissors"
       )
-
       ||
-
       (
         move1 === "paper" &&
         move2 === "rock"
       )
-
       ||
-
       (
         move1 === "scissors" &&
         move2 === "paper"
       )
-
     ) {
-
       return uid1;
-
     }
 
 
@@ -1386,14 +1482,9 @@ opponentPresenceRef: null,
 
     const moves = {
 
-      rock:
-        "✊",
-
-      paper:
-        "🖐️",
-
-      scissors:
-        "✌️"
+      rock: "✊",
+      paper: "🖐️",
+      scissors: "✌️"
 
     };
 
@@ -1406,12 +1497,450 @@ opponentPresenceRef: null,
   },
 
 
+  watchGamePresence() {
+
+    this.stopGamePresence();
+
+
+    const myPresence =
+      document.getElementById(
+        "gameMyPresence"
+      );
+
+
+    const opponentPresence =
+      document.getElementById(
+        "gameOpponentPresence"
+      );
+
+
+    if (
+      !this.uid ||
+      !this.opponentUid
+    ) {
+      return;
+    }
+
+
+    this.myPresenceRef =
+      database.ref(
+        "gameV2/users/" +
+        this.uid +
+        "/online"
+      );
+
+
+    this.opponentPresenceRef =
+      database.ref(
+        "gameV2/users/" +
+        this.opponentUid +
+        "/online"
+      );
+
+
+    this.myPresenceRef.on(
+      "value",
+      snapshot => {
+
+        this.updatePresenceUI(
+          myPresence,
+          snapshot.val() === true
+        );
+
+      }
+    );
+
+
+    this.opponentPresenceRef.on(
+      "value",
+      snapshot => {
+
+        this.updatePresenceUI(
+          opponentPresence,
+          snapshot.val() === true
+        );
+
+      }
+    );
+
+  },
+
+
+  updatePresenceUI(
+    element,
+    online
+  ) {
+
+    if (!element) {
+      return;
+    }
+
+
+    element.classList.remove(
+      "online",
+      "offline"
+    );
+
+
+    if (online) {
+
+      element.classList.add(
+        "online"
+      );
+
+      element.innerHTML =
+        "<span></span> ONLINE";
+
+    } else {
+
+      element.classList.add(
+        "offline"
+      );
+
+      element.innerHTML =
+        "<span></span> OFFLINE";
+
+    }
+
+  },
+
+
+  stopGamePresence() {
+
+    if (this.myPresenceRef) {
+
+      this.myPresenceRef.off();
+      this.myPresenceRef = null;
+
+    }
+
+
+    if (this.opponentPresenceRef) {
+
+      this.opponentPresenceRef.off();
+      this.opponentPresenceRef = null;
+
+    }
+
+  },
+
+
+  showGameMessage(
+    icon,
+    title,
+    text
+  ) {
+
+    const overlay =
+      document.getElementById(
+        "gameMessageOverlay"
+      );
+
+
+    const iconElement =
+      document.getElementById(
+        "gameMessageIcon"
+      );
+
+
+    const titleElement =
+      document.getElementById(
+        "gameMessageTitle"
+      );
+
+
+    const textElement =
+      document.getElementById(
+        "gameMessageText"
+      );
+
+
+    if (iconElement) {
+      iconElement.textContent = icon;
+    }
+
+
+    if (titleElement) {
+      titleElement.textContent = title;
+    }
+
+
+    if (textElement) {
+      textElement.textContent = text;
+    }
+
+
+    if (overlay) {
+      overlay.classList.remove(
+        "app-hidden"
+      );
+    }
+
+  },
+
+
+  hideGameMessage() {
+
+    const overlay =
+      document.getElementById(
+        "gameMessageOverlay"
+      );
+
+
+    if (overlay) {
+
+      overlay.classList.add(
+        "app-hidden"
+      );
+
+    }
+
+  },
+
+
+  async finishMatch(
+    matchResult
+  ) {
+
+    if (this.matchFinished) {
+      return;
+    }
+
+
+    this.matchFinished = true;
+
+    this.disableChoices();
+
+
+    const winnerUid =
+      matchResult.winnerUid;
+
+
+    if (
+      winnerUid ===
+      this.uid
+    ) {
+
+      await this.claimMyWin();
+
+    }
+
+
+    if (
+      winnerUid ===
+      this.uid
+    ) {
+
+      this.showGameMessage(
+        "🏆",
+        "ربحت المباراة!",
+        "تمت إضافة Win لحسابك"
+      );
+
+    } else {
+
+      this.showGameMessage(
+        "🎮",
+        "خسرت المباراة",
+        "حظ موفق فالمباراة الجاية"
+      );
+
+    }
+
+
+    if (
+      this.isResolver &&
+      !this.cleanupStarted
+    ) {
+
+      this.cleanupStarted =
+        true;
+
+
+      setTimeout(
+        () => {
+
+          this.cleanupFinishedMatch();
+
+        },
+        3000
+      );
+
+    }
+
+  },
+
+
+  async claimMyWin() {
+
+    if (
+      this.winClaimStarted ||
+      !this.roomId
+    ) {
+      return;
+    }
+
+
+    this.winClaimStarted =
+      true;
+
+
+    try {
+
+      const claimRef =
+        database.ref(
+          "gameV2/winClaims/" +
+          this.roomId
+        );
+
+
+      const claimResult =
+        await claimRef.transaction(
+          currentValue => {
+
+            if (
+              currentValue !== null
+            ) {
+              return;
+            }
+
+
+            return this.uid;
+
+          }
+        );
+
+
+      if (!claimResult.committed) {
+        return;
+      }
+
+
+      const winsRef =
+        database.ref(
+          "gameV2/users/" +
+          this.uid +
+          "/wins"
+        );
+
+
+      await winsRef.transaction(
+        currentWins => {
+
+          return Number(
+            currentWins || 0
+          ) + 1;
+
+        }
+      );
+
+
+      if (
+        typeof PlayerProfile !==
+        "undefined" &&
+        PlayerProfile.profile
+      ) {
+
+        PlayerProfile.profile.wins =
+          Number(
+            PlayerProfile.profile.wins ||
+            0
+          ) + 1;
+
+      }
+
+
+    } catch (error) {
+
+      console.error(
+        "Win claim error:",
+        error
+      );
+
+    }
+
+  },
+
+
+  async cleanupFinishedMatch() {
+
+    if (!this.roomId) {
+      return;
+    }
+
+
+    try {
+
+      const oldRoomId =
+        this.roomId;
+
+
+      const oldOpponentUid =
+        this.opponentUid;
+
+
+      const updates = {};
+
+
+      updates[
+        "gameV2/rooms/" +
+        oldRoomId
+      ] = null;
+
+
+      updates[
+        "gameV2/matchAssignments/" +
+        this.uid
+      ] = null;
+
+
+      if (oldOpponentUid) {
+
+        updates[
+          "gameV2/matchAssignments/" +
+          oldOpponentUid
+        ] = null;
+
+      }
+
+
+      await database
+        .ref()
+        .update(updates);
+
+
+      setTimeout(
+        () => {
+
+          this.hideGameMessage();
+          this.exitToHome();
+
+        },
+        800
+      );
+
+
+    } catch (error) {
+
+      console.error(
+        "Match cleanup error:",
+        error
+      );
+
+    }
+
+  },
+
+
   exitToHome() {
+
+    this.stopGamePresence();
+    this.hideGameMessage();
+
 
     if (this.roomRef) {
 
       this.roomRef.off();
-
       this.roomRef = null;
 
     }
@@ -1423,20 +1952,28 @@ opponentPresenceRef: null,
         this.nextRoundTimer
       );
 
-      this.nextRoundTimer =
-        null;
+      this.nextRoundTimer = null;
 
     }
 
 
-    this.roomId =
-      null;
+    this.roomId = null;
+    this.opponentUid = null;
+    this.myMove = null;
 
-    this.opponentUid =
-      null;
+    this.currentRound = 1;
 
-    this.myMove =
-      null;
+    this.resolverUid = null;
+    this.isResolver = false;
+
+    this.resolving = false;
+
+    this.lastScheduledRound = null;
+
+    this.leaving = false;
+    this.matchFinished = false;
+    this.cleanupStarted = false;
+    this.winClaimStarted = false;
 
 
     const gameScreen =
@@ -1469,98 +2006,7 @@ opponentPresenceRef: null,
     }
 
   },
-watchGamePresence() {
 
-  const myPresence =
-    document.getElementById(
-      "gameMyPresence"
-    );
-
-  const opponentPresence =
-    document.getElementById(
-      "gameOpponentPresence"
-    );
-
-  if (!this.uid || !this.opponentUid) {
-    return;
-  }
-
-  /* حالتي أنا */
-  this.myPresenceRef =
-    database.ref(
-      "gameV2/users/" +
-      this.uid +
-      "/online"
-    );
-
-  this.myPresenceRef.on(
-    "value",
-    (snapshot) => {
-
-      const online =
-        snapshot.val() === true;
-
-      this.updatePresenceUI(
-        myPresence,
-        online
-      );
-
-    }
-  );
-
-
-  /* حالة اللاعب الآخر */
-  this.opponentPresenceRef =
-    database.ref(
-      "gameV2/users/" +
-      this.opponentUid +
-      "/online"
-    );
-
-  this.opponentPresenceRef.on(
-    "value",
-    (snapshot) => {
-
-      const online =
-        snapshot.val() === true;
-
-      this.updatePresenceUI(
-        opponentPresence,
-        online
-      );
-
-    }
-  );
-
-},
-
-
-updatePresenceUI(element, online) {
-
-  if (!element) {
-    return;
-  }
-
-  element.classList.remove(
-    "online",
-    "offline"
-  );
-
-  if (online) {
-
-    element.classList.add("online");
-    element.innerHTML =
-      "<span></span> ONLINE";
-
-  } else {
-
-    element.classList.add("offline");
-    element.innerHTML =
-      "<span></span> OFFLINE";
-
-  }
-
-},
 
   formatCountry(country) {
 
