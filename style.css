@@ -1683,3 +1683,71 @@ select.profile-field option{
   }
 
 }
+
+/* ===== ONLINE / OFFLINE داخل المباراة ===== */
+
+.game-presence {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin-top: 10px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.game-presence span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.game-presence.online {
+  color: #5ee98b;
+  background: rgba(46, 204, 113, 0.10);
+}
+
+.game-presence.online span {
+  background: #45e27a;
+  box-shadow: 0 0 10px rgba(69, 226, 122, 0.7);
+}
+
+.game-presence.offline {
+  color: #ff7185;
+  background: rgba(255, 80, 105, 0.10);
+}
+
+.game-presence.offline span {
+  background: #ff5c72;
+}
+
+
+/* ===== زر الخروج من المباراة ===== */
+
+.leave-game-btn {
+  width: calc(100% - 48px);
+  max-width: 620px;
+  min-height: 64px;
+
+  display: block;
+  margin: 35px auto 20px;
+
+  border: 1px solid rgba(255, 91, 120, 0.28);
+  border-radius: 22px;
+
+  background: rgba(255, 70, 100, 0.07);
+  color: #ff7188;
+
+  font-size: 18px;
+  font-weight: 800;
+
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.leave-game-btn:active {
+  transform: scale(0.98);
+}
