@@ -9,21 +9,35 @@
 
 <body>
 
-  <div class="game-home">
-    <div class="game-icon">🎮</div>
+  <main class="home">
 
-    <h1>GAME READY</h1>
+    <div class="logo">🎮</div>
 
-    <p>GitHub is connected successfully</p>
+    <h1>PLAY TOGETHER</h1>
 
-    <button onclick="testGame()">START GAME</button>
-  </div>
+    <p class="subtitle">
+      العب مع صحابك مباشرة أونلاين
+    </p>
 
-  <script>
-    function testGame() {
-      alert("Game is working! 🎮");
-    }
-  </script>
-<script src="core.js"></script>
+    <div class="menu">
+
+      <button class="primary-btn" id="createGame">
+        إنشاء لعبة
+      </button>
+
+      <button class="secondary-btn" id="joinGame">
+        دخول بكود
+      </button>
+
+    </div>
+
+    <p class="status" id="status">
+      جاهز للعب
+    </p>
+
+  </main>
+
+  <script src="core.js"></script>
+
 </body>
-  </html>
+</html>
