@@ -1469,7 +1469,98 @@ opponentPresenceRef: null,
     }
 
   },
+watchGamePresence() {
 
+  const myPresence =
+    document.getElementById(
+      "gameMyPresence"
+    );
+
+  const opponentPresence =
+    document.getElementById(
+      "gameOpponentPresence"
+    );
+
+  if (!this.uid || !this.opponentUid) {
+    return;
+  }
+
+  /* حالتي أنا */
+  this.myPresenceRef =
+    database.ref(
+      "gameV2/users/" +
+      this.uid +
+      "/online"
+    );
+
+  this.myPresenceRef.on(
+    "value",
+    (snapshot) => {
+
+      const online =
+        snapshot.val() === true;
+
+      this.updatePresenceUI(
+        myPresence,
+        online
+      );
+
+    }
+  );
+
+
+  /* حالة اللاعب الآخر */
+  this.opponentPresenceRef =
+    database.ref(
+      "gameV2/users/" +
+      this.opponentUid +
+      "/online"
+    );
+
+  this.opponentPresenceRef.on(
+    "value",
+    (snapshot) => {
+
+      const online =
+        snapshot.val() === true;
+
+      this.updatePresenceUI(
+        opponentPresence,
+        online
+      );
+
+    }
+  );
+
+},
+
+
+updatePresenceUI(element, online) {
+
+  if (!element) {
+    return;
+  }
+
+  element.classList.remove(
+    "online",
+    "offline"
+  );
+
+  if (online) {
+
+    element.classList.add("online");
+    element.innerHTML =
+      "<span></span> ONLINE";
+
+  } else {
+
+    element.classList.add("offline");
+    element.innerHTML =
+      "<span></span> OFFLINE";
+
+  }
+
+},
 
   formatCountry(country) {
 
