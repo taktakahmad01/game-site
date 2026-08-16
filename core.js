@@ -118,7 +118,7 @@ const GameApp = {
         roomCode,
         false
       );
-
+this.watchRoom(roomCode);
     } catch (error) {
 
       console.error(error);
@@ -275,7 +275,36 @@ const GameApp = {
     );
 
   },
+watchRoom(roomCode) {
 
+  const roomRef = database.ref(
+    "gameV2/rooms/" + roomCode
+  );
+
+  roomRef.on("value", (snapshot) => {
+
+    if (!snapshot.exists()) {
+      return;
+    }
+
+    const room = snapshot.val();
+
+    if (
+      room.status === "ready" &&
+      room.playerCount >= 2
+    ) {
+
+      this.waitingTitle.textContent =
+        "اللاعب الثاني دخل ✅";
+
+      this.waitingText.textContent =
+        "اللاعبين بجوج متصلين";
+
+    }
+
+  });
+
+},
 
   async cancelRoom() {
 
